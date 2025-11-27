@@ -1,0 +1,31 @@
+﻿@{
+    ViewData["Title"] = "Home Page";
+}
+
+<div class="container">
+
+    <!-- HERO SECTION -->
+    <div class="hero-section text-center py-5">
+        <h1 class="welcome-text mb-2">Welcome to</h1>
+        <h1 class="bungee-title mb-4">MINESWEEPER</h1>
+    </div>
+
+    <!-- DESCRIPTION -->
+    <div class="row justify-content-center">
+        <div class="col-md-8 text-center">
+            <p class="lead mt-2">
+                Start playing the classic Minesweeper game now! Click the button below to begin your adventure
+                in uncovering hidden mines and testing your strategic skills. Sharpen your instincts and watch
+                your step—one wrong click and it’s game over… literally.
+            </p>
+        </div>
+    </div>
+
+    <!-- START BUTTON -->
+    <div class="text-center mt-5">
+        <a asp-controller="Home" asp-action="StartRedirect" class="btn btn-primary btn-lg px-4">
+            Start
+        </a>
+    </div>
+
+</div>

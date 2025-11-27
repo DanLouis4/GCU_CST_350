@@ -1,0 +1,58 @@
+html {
+  font-size: 14px;
+}
+
+@media (min-width: 768px) {
+  html {
+    font-size: 16px;
+  }
+}
+
+/**************************************************************
+    Helper styles like Google Fonts and Bootstrap overrides
+***************************************************************/
+
+.bungee-title {
+    font-family: 'Bungee Shade', sans-serif;
+    font-size: 4rem;
+    font-weight: 400;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.nav-logo {
+    font-family: 'Bungee', sans-serif;
+    font-size: 1.5rem;
+    letter-spacing: 3px;
+}
+
+/***************************************************************
+   More Bootstrap overrides
+*****************************************************************/
+.btn:focus, .btn:active:focus, .btn-link.nav-link:focus, .form-control:focus, .form-check-input:focus {
+  box-shadow: 0 0 0 0.1rem white, 0 0 0 0.25rem #258cfb;
+}
+
+html {
+  position: relative;
+  min-height: 100%;
+}
+
+body {
+  margin-bottom: 60px;
+}
+
+/***************************************************************
+   Validation Summary Styles
+*****************************************************************/
+.validation-summary-errors ul {
+    list-style: none;
+    padding-left: 0;
+}
+
+.validation-summary-errors li {
+    color: red;
+    font-weight: 500;
+    margin-bottom: 5px;
+    text-align: center;
+}

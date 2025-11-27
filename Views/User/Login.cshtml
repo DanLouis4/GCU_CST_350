@@ -1,0 +1,73 @@
+﻿@model MineSweeper_MVC.Models.LoginViewModel
+
+<div class="container mt-5">
+    <h2 class="text-center mb-4">Sign In</h2>
+
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+
+			<!-- Display TempData messages -->
+
+            <!-- Redirected from successful registrations -->
+            @if (TempData["RegisterSuccess"] != null)
+            {
+                <div class="alert alert-success text-center">
+                    @TempData["RegisterSuccess"]
+                </div>
+            }
+
+            <!-- Redirected from attempting to register with user name or email already stored in database -->
+            @if (TempData["RegisterFail"] != null)
+            {
+                <div class="alert alert-warning text-center">
+                    @TempData["RegisterFail"]
+                </div>
+            }
+
+            <!-- Redirected from attempting to access restricted views -->
+            @if (TempData["LoginRequired"] != null)
+            {
+                <div class="alert alert-warning text-center">
+                    @TempData["LoginRequired"]
+                </div>
+            }
+
+			<!-- Display validation summary -->
+            @Html.ValidationSummary(false, "", new { @class = "text-danger text-center" })
+
+            <form asp-action="Login" method="post" class="mx-auto" style="max-width: 420px;">
+
+                <!-- Username -->
+                <div class="form-floating mb-3">
+                    <input asp-for="Username" class="form-control" placeholder="User Name" />
+                    <label asp-for="Username">User Name</label>
+                </div>
+
+                <!-- Password + Show/Hide -->
+                <div class="form-floating mb-3 position-relative">
+                    <input asp-for="Password" type="password" id="passwordField"
+                           class="form-control" placeholder="Password" />
+                    <label asp-for="Password">Password</label>
+
+                    <button type="button" id="togglePass" class="btn btn-sm btn-outline-secondary position-absolute"
+                            style="right: 10px; top: 50%; transform: translateY(-50%);">Show</button>
+                </div>
+
+                <div class="text-center mt-4">
+                    <button class="btn btn-primary btn-lg px-4" type="submit">Sign In</button>
+                </div>
+
+                <p class="text-center mt-3">
+                    Don't have an account?
+                    <a asp-controller="User" asp-action="Register">SIGN UP</a>
+                </p>
+
+            </form>
+
+
+        </div>
+    </div>
+</div>
+@section Scripts {
+    <script src="~/js/helperjs.js"></script>
+}

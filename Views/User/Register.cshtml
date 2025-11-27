@@ -1,0 +1,91 @@
+﻿@model MineSweeper_MVC.Models.RegisterViewModel
+
+<div class="container mt-5">
+    <h2 class="text-center mb-4">Sign Up</h2>
+
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <form asp-action="Register" method="post">
+
+                <!-- PROFILE GROUP -->
+                <div class="card p-4 mb-4">
+                    <h5 class="mb-3">Profile</h5>
+
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <input asp-for="FirstName" class="form-control" placeholder="First Name" />
+                            <span asp-validation-for="FirstName" class="text-danger"></span>
+                        </div>
+
+                        <div class="col-md-6">
+                            <input asp-for="LastName" class="form-control" placeholder="Last Name"/>
+                            <span asp-validation-for="LastName" class="text-danger"></span>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <input asp-for="Email" type="email" class="form-control" placeholder="Email Address"/>
+                        <span asp-validation-for="Email" class="text-danger"></span>
+                    </div>
+
+                    <div class="row mb-3">
+                        <div class="col-md-4">
+                            <div class="form-check form-check-inline">
+                                <input asp-for="Sex" class="form-check-input" type="radio" value="Male" />
+                                <label class="form-check-label">Male</label>
+                            </div>
+                            <div class="form-check form-check-inline">
+                                <input asp-for="Sex" class="form-check-input" type="radio" value="Female" />
+                                <label class="form-check-label">Female</label>
+                            </div>
+                        </div>
+
+                        <div class="col-md-4">
+                            <input asp-for="Age" class="form-control" placeholder="Age"/>
+                            <span asp-validation-for="Age" class="text-danger"></span>
+                        </div>
+
+                        <div class="col-md-4">
+                            <select asp-for="State" asp-items="Html.GetEnumSelectList<USState>()" class="form-select">
+                                <option value="">State...</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ACCOUNT GROUP -->
+                <div class="form-floating mb-3">
+                    <input asp-for="Username" class="form-control" placeholder="User Name"/>
+                    <label class="form-label">User Name</label>
+                    <span asp-validation-for="Username" class="text-danger"></span>
+                </div>
+
+                <div class="mb-4">
+                    <div class="input-group">
+                        <input asp-for="Password" type="password" class="form-control" id="passwordField" placeholder="Password"/>
+                        <button type="button" class="btn btn-outline-secondary" id="togglePass">
+                            Show
+                        </button>
+                    </div>
+                    <small class="text-muted">Your password must be 8–20 characters long. <i style="color: lightcoral">not yet implemented...</i></small>
+                    <span asp-validation-for="Password" class="text-danger"></span>
+                </div>
+
+                <div class="text-center">
+                    <button class="btn btn-primary btn-lg px-4">Register</button>
+                </div>
+
+                <p class="text-center mt-3">
+                    Or already have an account?
+                    <a asp-controller="User" asp-action="Login">SIGN IN</a>
+                </p>
+
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="~/js/helperjs.js"></script>
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+}
