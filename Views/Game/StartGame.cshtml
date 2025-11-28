@@ -1,0 +1,46 @@
+﻿@model MineSweeper_MVC.Models.StartGameOptions
+@{ViewData["Title"] = "Start Game";}
+
+<div class="container text-center mt-5">
+
+    <h2 class="fw-bold m-5">Start a new game...</h2>
+
+    <form asp-action="InitializeGame" method="post">
+
+        <!-- Hidden fields populated by JS -->
+        <input type="hidden" id="boardSizeField" name="boardSize" value="@Model.BoardSize" />
+        <input type="hidden" id="difficultyField" name="difficultyType" value="@Model.DifficultyType" />
+
+
+        <!-- BOARD SIZE -->
+        <h4 class="fw-semibold">Select Board Size</h4>
+
+        <div class="option-group">
+            <div class="option-btn" data-value="10">10</div>
+            <div class="option-btn" data-value="15">15</div>
+            <div class="option-btn" data-value="20">20</div>
+        </div>
+
+
+        <!-- DIFFICULTY -->
+        <h4 class="fw-semibold">Select Difficulty</h4>
+
+        <div class="option-group">
+            <div class="difficulty-btn" data-value="Easy">EASY</div>
+            <div class="difficulty-btn" data-value="Normal">NORMAL</div>
+            <div class="difficulty-btn" data-value="Hard">HARD</div>
+        </div>
+
+
+        <!-- PLAY BUTTON -->
+        <button type="submit" class="btn btn-primary play-btn fw-bold">PLAY</button>
+
+    </form>
+</div>
+
+@section Scripts {
+    <script src="~/js/helperjs.js"></script>
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+}

@@ -28,10 +28,9 @@ namespace MineSweeper_MVC.Controllers
                 return RedirectToAction("Login", "User");
             }
 
-            // Logged in ? go to Game
-            return RedirectToAction("Index", "Game");
+            // Logged in to go to Game
+            return RedirectToAction("StartGame", "Game");
         }
-
 
         public IActionResult Privacy()
         {
