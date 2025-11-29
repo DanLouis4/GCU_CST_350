@@ -54,7 +54,6 @@ namespace MineSweeper_MVC.Controllers
 
         //POST: /Game/MindsweeperBoard
         [HttpPost]
-        [HttpPost]
         public IActionResult InitializeGame(int boardSize, string difficultyType)
         {
             if (User.Identity?.IsAuthenticated != true)
