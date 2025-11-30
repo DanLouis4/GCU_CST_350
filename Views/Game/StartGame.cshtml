@@ -5,7 +5,7 @@
 
     <h2 class="fw-bold m-5">Start a new game...</h2>
 
-    <form asp-action="InitializeGame" method="post">
+    <form asp-action="InitializeGamePost" method="post">
 
         <!-- Hidden fields populated by JS -->
         <input type="hidden" id="boardSizeField" name="boardSize" value="@Model.BoardSize" />

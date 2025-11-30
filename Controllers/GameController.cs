@@ -15,6 +15,9 @@ namespace MineSweeper_MVC.Controllers
         [HttpGet]
         public IActionResult StartGame()
         {
+            // Clear any existing game session data
+            ClearGameSession();
+
             // Retrieve username from session to ensure user is logged in
             var username = HttpContext.Session.GetString("Username");
             if (string.IsNullOrEmpty(username))
@@ -36,6 +39,9 @@ namespace MineSweeper_MVC.Controllers
         [HttpGet]
         public IActionResult RestartGame()
         {
+            // Clear any existing game session data
+            ClearGameSession();
+
             // Ensure user is authenticated
             var username = HttpContext.Session.GetString("Username");
             if (string.IsNullOrEmpty(username))
@@ -48,16 +54,27 @@ namespace MineSweeper_MVC.Controllers
             var savedDifficulty = HttpContext.Session.GetString($"LastDifficulty_{username}") ?? "Easy";
 
             // Delegate to the POST initializer
-            return RedirectToAction("InitializeGame", new
+            return RedirectToAction("InitializeGameGet", new
             {
                 boardSize = savedSize,
                 difficultyType = savedDifficulty
             });
         }
 
+        [HttpGet]
+        public IActionResult InitializeGameGet(int boardSize, string difficultyType)
+        {
+            return InitializeGameInternal(boardSize, difficultyType);
+        }
+
         //POST: /Game/MindSweeperBoard
         [HttpPost]
-        public IActionResult InitializeGame(int boardSize, string difficultyType)
+        public IActionResult InitializeGamePost(int boardSize, string difficultyType)
+        {
+            return InitializeGameInternal(boardSize, difficultyType);
+        }
+
+        private IActionResult InitializeGameInternal(int boardSize, string difficultyType)
         {
             var username = HttpContext.Session.GetString("Username");
             if (string.IsNullOrEmpty(username))
@@ -78,7 +95,11 @@ namespace MineSweeper_MVC.Controllers
             board.SetupRewards();
             board.CountBombNearby();
 
-            HttpContext.Session.SetString("StartTime", DateTime.UtcNow.ToString("o"));
+            // Set the start time in both Session AND Board
+            var now = DateTime.UtcNow;
+            board.StartTime = now;
+
+            // HttpContext.Session.SetString("StartTime", DateTime.UtcNow.ToString("o"));
             HttpContext.Session.SetString($"LastBoardSize_{username}", boardSize.ToString());
             HttpContext.Session.SetString($"LastDifficulty_{username}", difficultyType);
             HttpContext.Session.SetObject("CurrentBoard", board);
@@ -111,7 +132,7 @@ namespace MineSweeper_MVC.Controllers
             if (current.IsVisited)
                 return View("MineSweeperBoard", board);
 
-            // --- 1. HANDLE REWARD PICKUP ---------------------------------------------------
+            // --- 1. HANDLE REWARD PICKUP (Rewards not Implemented) ---------------------------------------------------
 
             if (current.Reward == Cell.RewardType.Detector)
             {
@@ -130,10 +151,10 @@ namespace MineSweeper_MVC.Controllers
 
             if (current.IsBomb && !current.IsDeactivated)
             {
-                // Player loses
+                // Mark the bomb hit
                 current.IsVisited = true;
 
-                // Reveal all bombs
+                // Reveal all bombs so board updates visually later
                 for (int r = 0; r < board.Size; r++)
                 {
                     for (int c = 0; c < board.Size; c++)
@@ -143,13 +164,26 @@ namespace MineSweeper_MVC.Controllers
                     }
                 }
 
-                // Mark game state
-                var result = Board.GameStatus.Lost;
+                board.EndTime = DateTime.Now;
+                int score = board.DetermineFinalScore(Board.GameStatus.Lost);
 
-                // Save board
+                foreach (var c in board.Cells)
+                {
+                    if (c.IsBomb)
+                        c.IsDeactivated = true;
+                }
+
+                ViewBag.GameState = Board.GameStatus.Lost;
+                ViewBag.GameOver = true;
+                ViewBag.FinalScore = score;
+
+                board.EndTime = DateTime.UtcNow;
+                var elapsed = board.EndTime - board.StartTime;
+                ViewBag.ElapsedTime = elapsed.ToString(@"mm\:ss");
+
+
                 HttpContext.Session.SetObject("CurrentBoard", board);
 
-                ViewBag.GameState = result;
                 return View("MineSweeperBoard", board);
             }
 
@@ -163,15 +197,34 @@ namespace MineSweeper_MVC.Controllers
                 FloodFill(board, row, col);
             }
 
-            // --- 4. CHECK WIN CONDITION ----------------------------------------------------
+            // --- 4. CHECK WON CONDITION ----------------------------------------------------
 
             var state = board.DetermineGameState();
 
             if (state == Board.GameStatus.Won)
             {
-                ViewBag.GameState = "Won";
+                board.EndTime = DateTime.Now;
+                int score = board.DetermineFinalScore(Board.GameStatus.Won);
 
-                // Save updated board
+                // Reveal all cells after winning
+                for (int r = 0; r < board.Size; r++)
+                {
+                    for (int c = 0; c < board.Size; c++)
+                    {
+                        board.Cells[r, c].IsVisited = true;
+                    }
+                }
+
+                // Save results for the Win View
+                ViewBag.GameState = Board.GameStatus.Won;
+                ViewBag.GameOver = true;
+                ViewBag.FinalScore = score;
+
+                board.EndTime = DateTime.UtcNow;
+                var elapsed = board.EndTime - board.StartTime;
+                ViewBag.ElapsedTime = elapsed.ToString(@"mm\:ss");
+
+                // Persist board end state (optional but safe)
                 HttpContext.Session.SetObject("CurrentBoard", board);
 
                 return View("MineSweeperBoard", board);
@@ -206,6 +259,7 @@ namespace MineSweeper_MVC.Controllers
          * -----------------------------------------
          */
 
+        // Recursive flood fill to reveal empty cells
         private void FloodFill(Board board, int row, int col)
         {
             for (int dr = -1; dr <= 1; dr++)
@@ -233,6 +287,14 @@ namespace MineSweeper_MVC.Controllers
                     }
                 }
             }
+        }
+
+        // Clear game session data
+        private void ClearGameSession()
+        {
+            HttpContext.Session.Remove("GameOver");
+            HttpContext.Session.Remove("StartTime");
+            HttpContext.Session.Remove("CurrentBoard");
         }
 
     }

@@ -71,23 +71,27 @@ function applyDefaultSelections() {
 
 document.addEventListener("DOMContentLoaded", applyDefaultSelections);
 
-
 /***************************************************************
  *  MINESWEEPER BOARD — TIMER SYSTEM
  *  Automatically activates ONLY on the game board page.
  ***************************************************************/
 function initializeBoardTimer() {
     const timerDisplay = document.getElementById("timer-display");
-    const startTimeAttr = document.getElementById("timer-display")?.getAttribute("data-start");
+    const startTimeAttr = timer-display?.getAttribute("data-start");
+    if (!startTimeAttr) return;
 
-    // Exit if not on the board page
-    if (!timerDisplay || !startTimeAttr) return;
-
-    const startTime = new Date(startTimeAttr);
+    let startTime = new Date(startTimeAttr);
 
     function updateTimer() {
+
+        // Stop timer immediately if game over
+        if (window.gameIsOver === true) {
+            clearInterval(window.timerInterval);
+            return;
+        }
+
         const now = new Date();
-        let elapsed = Math.floor((now - startTime) / 1000); // total seconds
+        let elapsed = Math.floor((now - startTime) / 1000);
 
         const minutes = Math.floor(elapsed / 60);
         const seconds = elapsed % 60;
@@ -96,9 +100,11 @@ function initializeBoardTimer() {
             minutes + ":" + (seconds < 10 ? "0" + seconds : seconds);
     }
 
-    // Run and keep running
+    // Run first tick
     updateTimer();
-    setInterval(updateTimer, 1000);
+
+    // Store interval globally so it can be cleared
+    window.timerInterval = setInterval(updateTimer, 1000);
 }
 
 document.addEventListener("DOMContentLoaded", initializeBoardTimer);

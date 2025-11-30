@@ -1,0 +1,29 @@
+﻿@* Shows the win details *@
+@{
+    bool isGameOver = ViewBag.GameOver as bool? == true;
+}
+
+<div class="alert alert-success text-center p-4">
+    <h2 class="mb-3">Congratulations!</h2>
+    <p>
+        Rest Easy!<br />
+        You Survived & Successfully Cleared the Board!
+    </p>
+
+    <p>Your Score: <strong>@ViewBag.FinalScore</strong></p>
+
+    <p>Time Taken: <strong>@ViewBag.ElapsedTime</strong></p>
+
+    @if (isGameOver)
+    {
+        <p>Game Over!</p>
+    }
+
+    <div class="gamestate-actions">
+        <a asp-controller="Game" asp-action="RestartGame" class="btn btn-primary btn-lg mx-2">Restart</a>
+
+        <a class="btn btn-danger btn-lg mx-2" href="/Home/Index">
+            Exit
+        </a>
+    </div>
+</div>
