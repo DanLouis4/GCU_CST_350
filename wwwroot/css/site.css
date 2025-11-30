@@ -138,3 +138,75 @@ body {
     font-size: 1.25rem;
     padding: 12px;
 }
+
+/***************************************************************
+    Board Styles
+****************************************************************/
+.board-grid {
+    display: grid;
+    gap: 0px;
+    justify-content: center; /* Center the grid within the page */
+    padding: 10px;
+}
+
+/* Each cell is a fixed square */
+.cell-tile {
+    width: 35px;
+    height: 35px;
+    background-size: cover;
+    background-repeat: no-repeat;
+    background-position: center;
+    border: none;
+    padding: 0;
+    cursor: pointer;
+}
+
+.header-box {
+    margin-bottom: 20px;
+}
+/*--------------------------------------------------------------
+    Board Info Panel (3-column header above grid)
+----------------------------------------------------------------*/
+
+.board-info {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1.5rem;
+    width: 90%;
+    margin: 0 auto 25px auto;
+    padding: 20px;
+}
+
+.info-section {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    text-align: center;
+}
+
+.info-row {
+    margin: 6px 0;
+}
+
+.label-large {
+    font-size: 1.1rem;
+    font-weight: 300;
+}
+
+.timer-center {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+.timer-value {
+    font-size: 1.8rem;
+    font-weight: bold;
+}
+
+.restart-btn,
+.giveup-btn {
+    width: 120px;
+    padding: 10px;
+    font-weight: 600;
+}

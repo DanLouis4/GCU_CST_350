@@ -12,12 +12,16 @@ namespace MineSweeper_MVC
             // Register DatabaseContext as a singleton service
             builder.Services.AddSingleton<MineSweeper_MVC.Data.DatabaseContext>();
 
+            // Add session services
             builder.Services.AddSession(options =>
             {
                 options.IdleTimeout = TimeSpan.FromMinutes(30);
                 options.Cookie.HttpOnly = true;
                 options.Cookie.IsEssential = true;
             });
+
+            // Add HttpContextAccessor service
+            builder.Services.AddHttpContextAccessor();
 
             var app = builder.Build();
 

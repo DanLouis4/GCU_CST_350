@@ -1,5 +1,109 @@
-﻿@*
-    For more information on enabling MVC for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
-*@
+﻿@model MineSweeper_MVC.Models.Board
+@inject Microsoft.AspNetCore.Http.IHttpContextAccessor HttpContextAccessor
+
+
 @{
+    ViewData["Title"] = "Minesweeper Board";
 }
+
+<div class="container text-center">
+
+    <div class="board-info">
+
+        <!-- COLUMN 1 — Board Details + Restart -->
+        <div class="info-section">
+            <div class="info-row label-large">Board Size: @Model.Size × @Model.Size</div>
+            <div class="info-row label-large">Difficulty: @Model.DifficultyType.ToUpper()</div>
+
+            <div class="info-row">
+                <a class="btn btn-primary restart-btn" href="/Game/RestartGame">Restart</a>
+            </div>
+        </div>
+
+        <!-- COLUMN 2 — Timer -->
+        <div class="info-section timer-center">
+            <div class="info-row label-large">Timer:</div>
+            <div class="info-row timer-value"
+                 id="timer-display"
+                 data-start="@HttpContextAccessor.HttpContext.Session.GetString("StartTime")">0:00
+             </div>
+		</div>
+
+        <!-- COLUMN 3 — Bomb Count + Flags + Give Up -->
+        <div class="info-section">
+            <div class="info-row label-large">
+                Bombs Left:
+                <span class="badge bg-danger ms-2">@Model.BombCount</span>
+            </div>
+
+            <div class="info-row label-large">
+                Flags Placed:
+                <span class="badge bg-secondary ms-2">#</span>
+            </div>
+
+            <div class="info-row">
+                <button class="btn btn-danger giveup-btn" formaction="/Game/GiveUp" formmethod="post">
+                    Give Up
+                </button>
+            </div>
+        </div>
+
+    </div>
+
+
+    <form asp-action="VisitCell" method="post">
+
+        <div class="board-grid"
+             style="grid-template-columns: repeat(@Model.Size, 35px);
+                    grid-template-rows: repeat(@Model.Size, 35px);">
+
+            @for (int row = 0; row < Model.Size; row++)
+            {
+                for (int col = 0; col < Model.Size; col++)
+                {
+                    var cell = Model.Cells[row, col];
+
+                    string img = (cell switch
+                    {
+                        // Hidden tile
+                        { IsVisited: false } => "/img/Tiles.bmp",
+
+                        // Bomb revealed (loss)
+                        { IsBomb: true, IsDeactivated: false } => "/img/Bomb.bmp",
+
+                        // Bomb detected (with detector)
+                        { IsDeactivated: true } => "/img/Bomb-detected.bmp",
+
+                        /* Reward revealed through flood fill
+                        { FloodRevealed: true, Reward: Cell.RewardType.Detector } => "/img/FF-Detector.bmp",
+                        { FloodRevealed: true, Reward: Cell.RewardType.Radar } => "/img/FF-Radar.bmp",
+                        */
+
+                        // Player clicked detector reward
+                        { IsVisited: true, Reward: Cell.RewardType.Detector } => "/img/Detector.bmp",
+
+                        // Player clicked radar reward
+                        { IsVisited: true, Reward: Cell.RewardType.Radar } => "/img/Radar.bmp",
+
+                        // Number cells
+                        { NumberOfBombNeighbors: > 0 } => $"/img/{cell.NumberOfBombNeighbors}.bmp",
+
+                        // Empty / Flood-fill tile
+                        _ => "/img/empty.bmp"
+                    });
+
+
+                    <button type="submit"
+                            name="cell"
+                            value="@($"{row},{col}")"
+                            class="cell-tile"
+                            style="background-image: url('@img')">
+                    </button>
+                }
+            }
+
+        </div>
+
+    </form>
+
+</div>

@@ -1,5 +1,5 @@
 ﻿using Microsoft.AspNetCore.Http;
-using System.Text.Json;
+using Newtonsoft.Json;
 
 namespace MineSweeper_MVC.Extensions
 {
@@ -7,14 +7,14 @@ namespace MineSweeper_MVC.Extensions
     {
         public static void SetObject(this ISession session, string key, object value)
         {
-            var json = JsonSerializer.Serialize(value);
+            var json = JsonConvert.SerializeObject(value);
             session.SetString(key, json);
         }
 
         public static T? GetObject<T>(this ISession session, string key)
         {
             var json = session.GetString(key);
-            return json == null ? default : JsonSerializer.Deserialize<T>(json);
+            return json == null ? default : JsonConvert.DeserializeObject<T>(json);
         }
     }
 }

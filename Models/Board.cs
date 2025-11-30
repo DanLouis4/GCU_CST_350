@@ -74,14 +74,16 @@ namespace MineSweeper_MVC.Models
 
             if (DifficultyType == "Normal")
             {
-                detectorCount = availableCells / 20;
+               // detectorCount = availableCells / 20;
+               return; // No rewards on Normal difficulty
             }
             else if (DifficultyType == "Hard")
             {
-                detectorCount = availableCells / 15;
+                // detectorCount = availableCells / 15;
+                return; // No rewards on Hard difficulty
             }
 
-            int radarCount = (DifficultyType == "Hard") ? 1 : 0; // 1 radar for Hard difficulty
+            int radarCount = (DifficultyType == "") ? 1 : 0; // 0 radar
 
             int placeDetectors = 0;
 
@@ -101,7 +103,7 @@ namespace MineSweeper_MVC.Models
 
             int placeRadars = 0;
 
-            if (!DifficultyType.Equals("Hard")) return; // No radars on Easy or Normal difficulty
+            if (!DifficultyType.Equals("")) return; // No radars available
 
             while (placeRadars < radarCount)
             {
