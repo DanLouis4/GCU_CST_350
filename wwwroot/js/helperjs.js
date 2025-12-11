@@ -77,7 +77,7 @@ document.addEventListener("DOMContentLoaded", applyDefaultSelections);
  ***************************************************************/
 function initializeBoardTimer() {
     const timerDisplay = document.getElementById("timer-display");
-    const startTimeAttr = timer-display?.getAttribute("data-start");
+    const startTimeAttr = timerDisplay?.getAttribute("data-start");
     if (!startTimeAttr) return;
 
     let startTime = new Date(startTimeAttr);
