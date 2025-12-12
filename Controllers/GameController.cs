@@ -237,8 +237,6 @@ namespace MineSweeper_MVC.Controllers
             return View("MineSweeperBoard", board);
         }
 
-
-
         // GET: /Game/MinesweeperBoard
         public IActionResult MinesweeperBoard()
         {
