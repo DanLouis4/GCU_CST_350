@@ -14,8 +14,7 @@
         {
             var cell = Model.Cells[row, col];
 
-            <partial name="_Cell"
-                     model="new CellViewModel { Row = row, Col = col, Cell = cell }" />
+            <partial name="_Cell" model="new CellViewModel { Row = row, Col = col, Cell = cell }" />
         }
     }
 </div>

@@ -57,19 +57,7 @@
         </div>
     }
 
-    <div class="board-grid mt-3"
-         style="grid-template-columns: repeat(@Model.Size, 35px);
-            grid-template-rows: repeat(@Model.Size, 35px);">
-
-        @for (int row = 0; row < Model.Size; row++)
-        {
-            for (int col = 0; col < Model.Size; col++)
-            {
-                var cell = Model.Cells[row, col];
-
-                <partial name="_Cell"
-                         model="new CellViewModel { Row = row, Col = col, Cell = cell }" />
-            }
-        }
+    <div id="board-area">
+        <partial name="_Board" model="Model" />
     </div>
 </div>
