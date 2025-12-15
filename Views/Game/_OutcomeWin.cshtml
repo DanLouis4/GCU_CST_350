@@ -1,29 +1,25 @@
 ﻿@* Shows the win details *@
 @{
-    bool isGameOver = ViewBag.GameOver as bool? == true;
+    // --- 0. RETRIEVE WIN DETAILS ----------------------------------------------------
+    string elapsed = ViewBag.ElapsedTime ?? "00:00";
+    int score = ViewBag.FinalScore ?? 0;
 }
 
-<div class="alert alert-success text-center p-4">
-    <h2 class="mb-3">Congratulations!</h2>
-    <p>
-        Rest Easy!<br />
-        You Survived & Successfully Cleared the Board!
-    </p>
+<!-- -------------------------------------------------------------------------------
+     WIN DISPLAY PANEL
+     Shown when the player reveals all safe tiles without hitting a bomb.
+--------------------------------------------------------------------------------- -->
+<div class="outcome-panel outcome-win">
 
-    <p>Your Score: <strong>@ViewBag.FinalScore</strong></p>
+    <!-- 1. WIN MESSAGE --------------------------------------------------------- -->
+    <h2 class="text-success">You Win!</h2>
+    <p>All safe tiles have been revealed.</p>
 
-    <p>Time Taken: <strong>@ViewBag.ElapsedTime</strong></p>
+    <!-- 2. GAME STATISTICS ----------------------------------------------------- -->
+    <p><strong>Time:</strong> @elapsed</p>
+    <p><strong>Final Score:</strong> @score</p>
 
-    @if (isGameOver)
-    {
-        <p>Game Over!</p>
-    }
+    <!-- 3. ACTION BUTTON ------------------------------------------------------- -->
+    <a href="/Game/StartGame" class="btn btn-success mt-2">Play Again</a>
 
-    <div class="gamestate-actions">
-        <a asp-controller="Game" asp-action="RestartGame" class="btn btn-primary btn-lg mx-2">Restart</a>
-
-        <a class="btn btn-danger btn-lg mx-2" href="/Home/Index">
-            Exit
-        </a>
-    </div>
 </div>

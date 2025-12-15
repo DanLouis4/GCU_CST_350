@@ -2,6 +2,7 @@
 using MineSweeper_MVC.Filters;
 using MineSweeper_MVC.Models;
 using MineSweeper_MVC.Extensions;
+using MineSweeper_MVC.Services;
 using Newtonsoft.Json;
 
 
@@ -11,6 +12,10 @@ namespace MineSweeper_MVC.Controllers
     [RequiresLogin]
     public class GameController : Controller
     {
+
+        private readonly CoreGameServices _gameServices = new CoreGameServices();
+
+
         // GET: /Game/StartGame: Display game start options
         [HttpGet]
         public IActionResult StartGame()
@@ -95,6 +100,8 @@ namespace MineSweeper_MVC.Controllers
             board.SetupRewards();
             board.CountBombNearby();
 
+            board.GameId = Random.Shared.Next(10000000, 99999999); // 8-digit seed
+
             // Set the start time in both Session AND Board
             var now = DateTime.UtcNow;
             board.StartTime = now;
@@ -107,134 +114,111 @@ namespace MineSweeper_MVC.Controllers
             return RedirectToAction("MineSweeperBoard");
         }
 
-        // POST: /Game/VisitCell: Handle cell visit actions
         [HttpPost]
         public IActionResult VisitCell(string cell)
         {
-            // Validate user
-            var username = HttpContext.Session.GetString("Username");
-            if (string.IsNullOrEmpty(username))
-                return RedirectToAction("Login", "User");
-
-            // Get board
-            var board = HttpContext.Session.GetObject<Board>("CurrentBoard");
-            if (board == null)
-                return RedirectToAction("StartGame");
-
-            // Parse the "row,col" input
+            // --- 0. VALIDATE INPUT & SESSION ----------------------------------------------
             var parts = cell.Split(',');
             int row = int.Parse(parts[0]);
             int col = int.Parse(parts[1]);
 
-            var current = board.Cells[row, col];
+            var board = HttpContext.Session.GetObject<Board>("CurrentBoard");
+            if (board == null)
+                return RedirectToAction("StartGame");
 
-            // If already visited, no action needed
-            if (current.IsVisited)
-                return View("MineSweeperBoard", board);
+            // --- 1. RUN SHARED CLICK LOGIC -------------------------------------------------
+            var state = _gameServices.ProcessCellClick(board, row, col);
 
-            // --- 1. HANDLE REWARD PICKUP (Rewards not Implemented) ---------------------------------------------------
-
-            if (current.Reward == Cell.RewardType.Detector)
+            // --- 2. HANDLE LOSS UI ---------------------------------------------------------
+            if (state == Board.GameStatus.Lost)
             {
-                board.DetectorOwned++;
-                current.Reward = Cell.RewardType.None;
-                current.IsVisited = true;
-            }
-            else if (current.Reward == Cell.RewardType.Radar)
-            {
-                board.RadarOwned++;
-                current.Reward = Cell.RewardType.None;
-                current.IsVisited = true;
-            }
-
-            // --- 2. HANDLE BOMB CLICK ------------------------------------------------------
-
-            if (current.IsBomb && !current.IsDeactivated)
-            {
-                // Mark the bomb hit
-                current.IsVisited = true;
-
-                // Reveal all bombs so board updates visually later
-                for (int r = 0; r < board.Size; r++)
-                {
-                    for (int c = 0; c < board.Size; c++)
-                    {
-                        if (board.Cells[r, c].IsBomb)
-                            board.Cells[r, c].IsVisited = true;
-                    }
-                }
-
-                board.EndTime = DateTime.Now;
+                board.EndTime = DateTime.UtcNow;
                 int score = board.DetermineFinalScore(Board.GameStatus.Lost);
-
-                foreach (var c in board.Cells)
-                {
-                    if (c.IsBomb)
-                        c.IsDeactivated = true;
-                }
 
                 ViewBag.GameState = Board.GameStatus.Lost;
                 ViewBag.GameOver = true;
                 ViewBag.FinalScore = score;
 
-                board.EndTime = DateTime.UtcNow;
                 var elapsed = board.EndTime - board.StartTime;
                 ViewBag.ElapsedTime = elapsed.ToString(@"mm\:ss");
 
-
                 HttpContext.Session.SetObject("CurrentBoard", board);
-
                 return View("MineSweeperBoard", board);
             }
 
-            // --- 3. HANDLE SAFE TILE -------------------------------------------------------
-
-            current.IsVisited = true;
-
-            // If the tile has no neighboring bombs → flood fill
-            if (current.NumberOfBombNeighbors == 0)
-            {
-                FloodFill(board, row, col);
-            }
-
-            // --- 4. CHECK WON CONDITION ----------------------------------------------------
-
-            var state = board.DetermineGameState();
-
+            // --- 3. HANDLE WIN UI ----------------------------------------------------------
             if (state == Board.GameStatus.Won)
             {
-                board.EndTime = DateTime.Now;
+                board.EndTime = DateTime.UtcNow;
                 int score = board.DetermineFinalScore(Board.GameStatus.Won);
 
-                // Reveal all cells after winning
-                for (int r = 0; r < board.Size; r++)
-                {
-                    for (int c = 0; c < board.Size; c++)
-                    {
-                        board.Cells[r, c].IsVisited = true;
-                    }
-                }
-
-                // Save results for the Win View
                 ViewBag.GameState = Board.GameStatus.Won;
                 ViewBag.GameOver = true;
                 ViewBag.FinalScore = score;
 
-                board.EndTime = DateTime.UtcNow;
                 var elapsed = board.EndTime - board.StartTime;
                 ViewBag.ElapsedTime = elapsed.ToString(@"mm\:ss");
 
-                // Persist board end state (optional but safe)
                 HttpContext.Session.SetObject("CurrentBoard", board);
-
                 return View("MineSweeperBoard", board);
             }
 
-            // --- 5. SAVE AND RETURN --------------------------------------------------------
+            // --- 4. SAVE AND RETURN NORMAL BOARD -------------------------------------------
+            HttpContext.Session.SetObject("CurrentBoard", board);
+            return View("MineSweeperBoard", board);
+        }
+
+        [HttpPost]
+        public IActionResult VisitCellAjax(int row, int col)
+        {
+            // --- 0. VALIDATE SESSION -------------------------------------------------------
+            var board = HttpContext.Session.GetObject<Board>("CurrentBoard");
+            if (board == null)
+                return BadRequest("No game in session.");
+
+            // --- 1. PROCESS CLICK THROUGH SHARED LOGIC -------------------------------------
+            var state = _gameServices.ProcessCellClick(board, row, col);
+
+            // --- 2. SET VIEWBAG OUTCOME DATA FOR PARTIAL RENDERING -------------------------
+            ViewBag.GameState = state;
+            ViewBag.GameOver = (state == Board.GameStatus.Won || state == Board.GameStatus.Lost);
+
+            if (ViewBag.GameOver)
+            {
+                // Record end time for elapsed time and scoring
+                board.EndTime = DateTime.UtcNow;
+
+                // Calculate final score based on win/loss
+                ViewBag.FinalScore = board.DetermineFinalScore(state);
+
+                // Compute elapsed time in mm:ss format
+                var elapsed = board.EndTime - board.StartTime;
+                ViewBag.ElapsedTime = elapsed.ToString(@"mm\:ss");          
+            }
+
+            // --- 3. SAVE UPDATED BOARD BACK INTO SESSION ------------------------------------
+            HttpContext.Session.SetObject("CurrentBoard", board);
+
+            // --- 4. RETURN UPDATED BOARD PARTIAL FOR AJAX -----------------------------------
+            return PartialView("_GameState", board);
+        }
+
+        [HttpPost]
+        public IActionResult ToggleFlagAjax(int row, int col)
+        {
+            var board = HttpContext.Session.GetObject<Board>("CurrentBoard");
+            if (board == null)
+                return BadRequest();
+
+            _gameServices.ToggleFlag(board, row, col);
+
+            // Update ViewBag for Razor
+            ViewBag.GameOver = false;
+            ViewBag.GameState = Board.GameStatus.InProgress;
 
             HttpContext.Session.SetObject("CurrentBoard", board);
 
-            return View("MineSweeperBoard", board);
+            return PartialView("_GameState", board);
         }
 
         // GET: /Game/MinesweeperBoard
@@ -251,43 +235,7 @@ namespace MineSweeper_MVC.Controllers
             return View(board);
         }
 
-        /*
-         * -----------------------------------------
-         * Helper Methods
-         * -----------------------------------------
-         */
-
-        // Recursive flood fill to reveal empty cells
-        private void FloodFill(Board board, int row, int col)
-        {
-            for (int dr = -1; dr <= 1; dr++)
-            {
-                for (int dc = -1; dc <= 1; dc++)
-                {
-                    if (dr == 0 && dc == 0) continue;
-
-                    int newRow = row + dr;
-                    int newCol = col + dc;
-
-                    if (board.IsCellOnBoard(newRow, newCol))
-                    {
-                        var neighbor = board.Cells[newRow, newCol];
-
-                        if (!neighbor.IsVisited && !neighbor.IsBomb)
-                        {
-                            neighbor.IsVisited = true;
-
-                            if (neighbor.NumberOfBombNeighbors == 0)
-                            {
-                                FloodFill(board, newRow, newCol);
-                            }
-                        }
-                    }
-                }
-            }
-        }
-
-        // Clear game session data
+         // Clear game session data
         private void ClearGameSession()
         {
             HttpContext.Session.Remove("GameOver");

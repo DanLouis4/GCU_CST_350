@@ -1,26 +1,25 @@
 ﻿@* Shows the lost details *@
 @{
-    bool isGameOver = ViewBag.GameOver as bool? == true;
+    // --- 0. RETRIEVE LOSS DETAILS ---------------------------------------------------
+    string elapsed = ViewBag.ElapsedTime ?? "00:00";
+    int score = ViewBag.FinalScore ?? 0;
 }
 
-<div class="alert alert-danger text-center p-4">
-    <h2 class="mb-3">Boom!</h2>
-    <p>Oops!<br />You Hit A Bomb... a big one, & Exploded!</p>
+<!-- -------------------------------------------------------------------------------
+     LOSS DISPLAY PANEL
+     Shown when the player clicks a bomb and the game ends immediately.
+-------------------------------------------------------------------------------- -->
+<div class="outcome-panel outcome-lost">
 
-    <p>Your Score: <strong>@ViewBag.FinalScore</strong></p>
+    <!-- 1. LOSS MESSAGE -------------------------------------------------------- -->
+    <h2 class="text-danger">Game Over</h2>
+    <p>You triggered a bomb.</p>
 
-    <p>Time Taken: <strong>@ViewBag.ElapsedTime</strong></p>
+    <!-- 2. GAME STATISTICS ----------------------------------------------------- -->
+    <p><strong>Time:</strong> @elapsed</p>
+    <p><strong>Final Score:</strong> @score</p>
 
-    @if (isGameOver)
-    {
-        <p>Game Over!</p>
-    }
+    <!-- 3. ACTION BUTTON ------------------------------------------------------- -->
+    <a href="/Game/StartGame" class="btn btn-danger mt-2">Play Again</a>
 
-    <div class="gamestate-actions">
-        <a asp-controller="Game" asp-action="RestartGame" class="btn btn-primary btn-lg mx-2">Restart</a>
-
-        <a class="btn btn-danger btn-lg mx-2" href="/Home/Index">
-            Exit
-        </a>
-    </div>
 </div>

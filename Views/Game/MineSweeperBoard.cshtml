@@ -1,128 +1,23 @@
 ﻿@model MineSweeper_MVC.Models.Board
 @inject Microsoft.AspNetCore.Http.IHttpContextAccessor HttpContextAccessor
-@{
-    bool isGameOver = ViewBag.GameOver as bool? == true;
-}
-@section Scripts {
-    <script>
-        window.gameIsOver = @(isGameOver.ToString().ToLower());
-        if (window.gameIsOver) {
-            window.dispatchEvent(new Event("gameOverTriggered"));
-        }
-    </script>
-}
 
-
-@{
-    ViewData["Title"] = "Minesweeper Board";
-}
-
-<div class="container text-center">
-
-        @if (ViewBag.GameState == Board.GameStatus.Won)
-        {
-            @await Html.PartialAsync("_OutcomeWin", Model)
-        }
-        else if (ViewBag.GameState == Board.GameStatus.Lost)
-        {
-            @await Html.PartialAsync("_OutcomeLost", Model)
-        }
-        else
-        {
-            <div class="board-info">
-        
-                <!-- COLUMN 1 — Board Details + Restart -->
-                <div class="info-section">
-                    <div class="info-row label-large">Board Size: @Model.Size × @Model.Size</div>
-                    <div class="info-row label-large">Difficulty: @Model.DifficultyType.ToUpper()</div>
-
-                    <div class="info-row">
-				        <a asp-controller="Game" asp-action="RestartGame" class="btn btn-primary restart-btn">Restart</a>
-                    </div>
-                </div>
-
-                <!-- COLUMN 2 — Timer -->
-                <div class="info-section timer-center">
-                    <div class="info-row label-large">Timer:</div>
-                <div class="info-row timer-value" id="timer-display" data-start="@Model.StartTime.ToString("o")">0:00</div>
-                </div>
-
-                <!-- COLUMN 3 — Bomb Count + Flags + Give Up -->
-                <div class="info-section">
-                    <div class="info-row label-large">
-                        Bombs Left:
-                        <span class="badge bg-danger ms-2">@Model.BombCount</span>
-                    </div>
-
-                    <div class="info-row label-large">
-                        Flags Placed:
-                        <span class="badge bg-secondary ms-2">#</span>
-                    </div>
-
-                    <div class="info-row">
-                        <button class="btn btn-danger giveup-btn" formaction="/Game/GiveUp" formmethod="post">
-                            Give Up
-                        </button>
-                    </div>
-                </div>
-            </div>
-        }
-
-    <form asp-action="VisitCell" method="post">
-
-        <div class="board-grid"
-             style="grid-template-columns: repeat(@Model.Size, 35px);
-                    grid-template-rows: repeat(@Model.Size, 35px);">
-
-            @for (int row = 0; row < Model.Size; row++)
-            {
-                for (int col = 0; col < Model.Size; col++)
-                {
-                    var cell = Model.Cells[row, col];
-
-                    string img = (cell switch
-                    {
-                        // Hidden tile
-                        { IsVisited: false } => "/img/Tiles.bmp",
-
-                        // Bomb revealed (loss)
-                        { IsBomb: true, IsDeactivated: false } => "/img/Bomb.bmp",
-
-                        // Bomb detected (with detector)
-                        { IsDeactivated: true } => "/img/Bomb.bmp",
-
-                        /* Reward revealed through flood fill
-
-                        { FloodRevealed: true, Reward: Cell.RewardType.Detector } => "/img/FF-Detector.bmp",
-                        { FloodRevealed: true, Reward: Cell.RewardType.Radar } => "/img/FF-Radar.bmp",
-                        
-
-                        // Player clicked detector reward
-                        { IsVisited: true, Reward: Cell.RewardType.Detector } => "/img/Detector.bmp",
-
-                        // Player clicked radar reward
-                        { IsVisited: true, Reward: Cell.RewardType.Radar } => "/img/Radar.bmp",
-                        */
-
-                        // Number cells
-                        { NumberOfBombNeighbors: > 0 } => $"/img/{cell.NumberOfBombNeighbors}.bmp",
-
-                        // Empty / Flood-fill tile
-                        _ => "/img/empty.bmp"
-                    });
-
-
-                    <button type="submit"
-                            name="cell"
-                            value="@($"{row},{col}")"
-                            class="cell-tile"
-                            style="background-image: url('@img')"
-                            @(isGameOver ? "disabled" : "")>
-                    </button>
-                }
-            }
-
-        </div>
-
-    </form>
+<div class="ajax-proof text-muted text-md-center small mb-2">
+    Game ID: <strong>@Model.GameId</strong> |
+    Game Started: <strong>@Model.StartTime.ToLocalTime().ToString("HH:mm:ss")</strong>
 </div>
+
+
+<div class="info-section timer-center timer-wrapper">
+    <div class="info-row label-large">Timer:</div>
+    <div class="info-row timer-value"
+         id="game-timer"
+         data-start="@Model.StartTime.ToString("o")">
+        0:00
+    </div>
+</div>
+
+<div id="game-state-area">
+    <partial name="_GameState" model="Model" />
+</div>
+
+

@@ -1,0 +1,75 @@
+﻿@model MineSweeper_MVC.Models.Board
+
+@{
+    bool isOver = ViewBag.GameOver != null && (bool)ViewBag.GameOver;
+    var state = ViewBag.GameState;
+}
+<div class="game-state">
+    @if (isOver)
+    {
+        <div id="game-over-flag" data-state="@state"></div>
+
+        if (state == Board.GameStatus.Won)
+        {
+            <partial name="_OutcomeWin" />
+        }
+        else if (state == Board.GameStatus.Lost)
+        {
+            <partial name="_OutcomeLost" />
+        }
+    }
+    else
+    {
+        <div class="board-info">
+
+            <!-- COLUMN 1 — Board Details + Restart -->
+            <div class="info-section">
+                <div class="info-row label-large">Board Size: @Model.Size × @Model.Size</div>
+                <div class="info-row label-large">Difficulty: @Model.DifficultyType.ToUpper()</div>
+
+                <div class="info-row">
+                    <a asp-controller="Game" asp-action="RestartGame" class="btn btn-primary restart-btn">Restart</a>
+                </div>
+            </div>
+
+            <!-- COLUMN 2 — Timer -->
+            <div class="info-section timer-center">
+            </div>
+
+            <!-- COLUMN 3 — Bomb Count + Flags + Give Up -->
+            <div class="info-section">
+                <div class="info-row label-large">
+                    Bombs Left:
+                    <span class="badge bg-danger ms-2">@Model.BombCount</span>
+                </div>
+
+                <div class="info-row label-large">
+                    Flags Placed:
+                    <span class="badge bg-secondary ms-2">@Model.FlagsPlaced</span>
+                </div>
+
+                <div class="info-row">
+                    <button class="btn btn-danger giveup-btn" formaction="/Game/GiveUp" formmethod="post">
+                        Give Up
+                    </button>
+                </div>
+            </div>
+        </div>
+    }
+
+    <div class="board-grid mt-3"
+         style="grid-template-columns: repeat(@Model.Size, 35px);
+            grid-template-rows: repeat(@Model.Size, 35px);">
+
+        @for (int row = 0; row < Model.Size; row++)
+        {
+            for (int col = 0; col < Model.Size; col++)
+            {
+                var cell = Model.Cells[row, col];
+
+                <partial name="_Cell"
+                         model="new CellViewModel { Row = row, Col = col, Cell = cell }" />
+            }
+        }
+    </div>
+</div>

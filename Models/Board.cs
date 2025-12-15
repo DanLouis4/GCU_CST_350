@@ -4,10 +4,12 @@ namespace MineSweeper_MVC.Models
 {
     public class Board
     {
+        public int GameId { get; set; }
         public int Size { get; set; }
         public float Difficulty { get; set; }
         public string DifficultyType { get; set; }
         public Cell[,] Cells { get; set; }
+        public int FlagsPlaced => Cells.Cast<Cell>().Count(c => c.IsFlagged);    
         public int DetectorOwned { get; set; }
         public int DetectorFound { get; set; }
         public int RadarOwned { get; set; }
@@ -18,6 +20,7 @@ namespace MineSweeper_MVC.Models
         public DateTime EndTime { get; set; }
         public int BombCount { get; set; }
         public enum GameStatus { InProgress, Won, Lost }
+        public GameStatus CurrentStatus { get; set; } = GameStatus.InProgress;
 
         Random random = new Random();
 
@@ -117,7 +120,6 @@ namespace MineSweeper_MVC.Models
             }
             TotalRadar = radarCount; // Track total detectors
         }
-
 
         // Use during setup to calculate the number of bomb neighbors for each cell
         public void CountBombNearby()

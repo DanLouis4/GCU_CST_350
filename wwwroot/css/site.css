@@ -161,6 +161,18 @@ body {
     cursor: pointer;
 }
 
+/* Each cell is a fixed square */
+.cell-btn {
+    width: 35px;
+    height: 35px;
+    background-size: cover;
+    background-repeat: no-repeat;
+    background-position: center;
+    border: none;
+    padding: 0;
+    cursor: pointer;
+}
+
 .header-box {
     margin-bottom: 20px;
 }
@@ -209,6 +221,10 @@ body {
     width: 120px;
     padding: 10px;
     font-weight: 600;
+}
+
+.outcome-panel {
+    text-align: center;
 }
 
 /****************************************************************

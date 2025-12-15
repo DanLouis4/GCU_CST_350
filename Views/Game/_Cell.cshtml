@@ -1,4 +1,46 @@
-﻿
-@*
-    For more information on enabling MVC for empty projects, visit http://go.microsoft.com/fwlink/?LinkID=397860
-*@
+﻿@model MineSweeper_MVC.Models.CellViewModel
+
+@{
+    var cell = Model.Cell;
+
+    string img = cell switch
+    {
+        // Flagged Cell
+        { IsFlagged: true } => "/img/Flag.bmp",
+
+        // Hidden tile
+        { IsVisited: false } => "/img/Tiles.bmp",
+
+        // Bomb revealed (loss)
+        { IsBomb: true, IsDeactivated: false } => "/img/Bomb.bmp",
+
+        // Bomb detected (with detector)
+        { IsDeactivated: true } => "/img/Bomb.bmp",
+
+        // Number cells
+        { NumberOfBombNeighbors: > 0 } => $"/img/{cell.NumberOfBombNeighbors}.bmp",
+
+        // Empty / Flood-fill tile
+        _ => "/img/empty.bmp"
+
+        /* Reward logic not implemented yet
+         * 
+        // Reward revealed through flood fill
+        { FloodFilled: true, Reward: Cell.RewardType.Detector } => "/img/FF-Detector.bmp",
+        { FloodFilled: true, Reward: Cell.RewardType.Radar }    => "/img/FF-Radar.bmp",
+
+        // Player clicked detector reward
+        { IsVisited: true, Reward: Cell.RewardType.Detector } => "/img/Detector.bmp",
+
+        // Player clicked radar reward
+        { IsVisited: true, Reward: Cell.RewardType.Radar }    => "/img/Radar.bmp",
+        */
+    };
+}
+
+<button type="button"
+        class="cell-btn"
+        data-row="@Model.Row"
+        data-col="@Model.Col"
+        style="background-image: url('@img')"
+</button>

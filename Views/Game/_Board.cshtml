@@ -1,0 +1,21 @@
+﻿@model MineSweeper_MVC.Models.Board
+
+<!-- Partial view of the game board for Ajax -->
+
+<!-- 1. RENDER GAME BOARD ONLY (NO OUTCOME UI HERE) -->
+
+<div class="board-grid"
+     style="grid-template-columns: repeat(@Model.Size, 35px);
+            grid-template-rows: repeat(@Model.Size, 35px);">
+
+    @for (int row = 0; row < Model.Size; row++)
+    {
+        for (int col = 0; col < Model.Size; col++)
+        {
+            var cell = Model.Cells[row, col];
+
+            <partial name="_Cell"
+                     model="new CellViewModel { Row = row, Col = col, Cell = cell }" />
+        }
+    }
+</div>
