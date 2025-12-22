@@ -1,174 +1,110 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using MineSweeper_MVC.Models;
-using MineSweeper_MVC.Data;
-using Microsoft.Data.SqlClient;
-using System.Security.Cryptography;
-using System.Text;
+using MineSweeper_MVC.Services;
 
 namespace MineSweeper_MVC.Controllers
 {
+    // Handles HTTP flow and session state only.
+    // All business logic and persistence are delegated to services.
     public class UserController : Controller
     {
-        // Dependency injection of DatabaseContext
-        private readonly DatabaseContext _db;
+        private readonly IUserService _userService;
 
-        // Constructor for dependency injection
-        public UserController(DatabaseContext db)
+        public UserController(IUserService userService)
         {
-            _db = db;
+            _userService = userService;
         }
 
-        // GET: /User/Register
-        public IActionResult Register()
-        {
-            return View();
-        }
+        // ----------------------------------------------------
+        // Registration
+        // ----------------------------------------------------
+        [HttpGet]
+        public IActionResult Register() => View();
 
-        // POST: /User/Register
         [HttpPost]
-        public IActionResult Register(RegisterViewModel model) // Method takes RegisterViewModel as parameter which contains user registration data
+        public IActionResult Register(RegisterViewModel model)
         {
             if (!ModelState.IsValid)
                 return View(model);
 
-            // SqlConnection object to connect to the database
-            using (SqlConnection conn = _db.GetConnection())
+            try
             {
-                // Open the database connection
-                conn.Open();
-
-                // Check if email already exists
-                string checkEmailSql = "SELECT COUNT(*) FROM Users WHERE Email = @Email";
-
-                // SqlCommand object to execute the SQL query
-                using (SqlCommand emailCmd = new SqlCommand(checkEmailSql, conn))
-                {
-                    emailCmd.Parameters.AddWithValue("@Email", model.Email);
-
-                    // Execute the ExecuteScalar method that returns the first column of the first row in the result set
-                    int emailCount = (int)emailCmd.ExecuteScalar();
-                    if (emailCount > 0)
-                    {
-                        TempData["RegisterFail"] = "An account already exists. Please sign in.";
-                        return RedirectToAction("Login");
-                    }
-                }
-
-                // Check if username is already taken
-                string checkUserSql = "SELECT COUNT(*) FROM Users WHERE Username = @Username";
-                using (SqlCommand userCmd = new SqlCommand(checkUserSql, conn))
-                {
-                    userCmd.Parameters.AddWithValue("@Username", model.Username);
-
-                    // Execute the ExecuteScalar method that returns the first column of the first row in the result set
-                    int userCount = (int)userCmd.ExecuteScalar();
-                    if (userCount > 0)
-                    {
-                        ModelState.AddModelError("", "User name unavailable.");
-                        return View(model);
-                    }
-                }
-
-                // Insert new user
-                string passwordHash = HashPassword(model.Password);
-                string insertSql = @"INSERT INTO Users (FirstName, LastName, Sex, Age, State, Email, Username, PasswordHash)
-                             VALUES (@FirstName, @LastName, @Sex, @Age, @State, @Email, @Username, @PasswordHash)";
-
-                using (SqlCommand cmd = new SqlCommand(insertSql, conn))
-                {
-                    cmd.Parameters.AddWithValue("@FirstName", model.FirstName);
-                    cmd.Parameters.AddWithValue("@LastName", model.LastName);
-                    cmd.Parameters.AddWithValue("@Sex", model.Sex);
-                    cmd.Parameters.AddWithValue("@Age", model.Age);
-                    cmd.Parameters.AddWithValue("@State", model.State.ToString());
-                    cmd.Parameters.AddWithValue("@Email", model.Email);
-                    cmd.Parameters.AddWithValue("@Username", model.Username);
-                    cmd.Parameters.AddWithValue("@PasswordHash", passwordHash);
-
-                    cmd.ExecuteNonQuery();
-                }
+                _userService.Register(model);
+                TempData["RegisterSuccess"] = "Registration successful. Please sign in.";
+                return RedirectToAction("Login");
             }
-
-            TempData["RegisterSuccess"] = "Registration successful. Please sign in.";
-            return RedirectToAction("Login");
+            catch (InvalidOperationException ex)
+            {
+                ModelState.AddModelError("", ex.Message);
+                return View(model);
+            }
         }
 
+        // ----------------------------------------------------
+        // Login
+        // ----------------------------------------------------
+        [HttpGet]
+        public IActionResult Login() => View();
 
-        // GET: /User/Login
-        public IActionResult Login()
-        {
-            return View();
-        }
-
-        // POST: /User/Login
         [HttpPost]
-        public IActionResult Login(LoginViewModel model) // Method takes LoginViewModel as parameter which contains user login data
+        public IActionResult Login(LoginViewModel model)
         {
             if (!ModelState.IsValid)
                 return View(model);
 
-            // Hash the input password
-            string hashedInput = HashPassword(model.Password);
-
-            // Retrieve stored password hash from the database
-            string storedHash = null;
-
-            using (SqlConnection conn = _db.GetConnection())
-            {
-                conn.Open();
-
-                // SQL command to get the password hash for the given username
-                string sql = "SELECT PasswordHash FROM Users WHERE Username = @un";
-
-                // Create and execute the command
-                using (SqlCommand cmd = new SqlCommand(sql, conn))
-                {
-                    cmd.Parameters.AddWithValue("@un", model.Username);
-
-                    // The ExecuteScalar method returns the first column of the first row in the result set
-                    object result = cmd.ExecuteScalar();
-
-                    // If user exists, retrieve the password hash
-                    if (result != null)
-                    {
-                        storedHash = result.ToString(); // Cast to string
-                    }
-                }
-            }
-
-            // If storedhas is null then user does not exist; or if password does not match...
-            if (storedHash == null || storedHash != hashedInput)
+            var userId = _userService.Login(model);
+            if (userId == null)
             {
                 ModelState.AddModelError("", "Invalid username or password.");
                 return View(model);
             }
 
-            // Login successful - store session
+            HttpContext.Session.SetInt32("UserId", userId.Value);
             HttpContext.Session.SetString("Username", model.Username);
 
-            // Login success — redirect for now
             return RedirectToAction("StartRedirect", "Home");
         }
 
-        // GET: /User/Logout
+        // ----------------------------------------------------
+        // Profile (View / Edit)
+        // ----------------------------------------------------
+        [HttpGet]
+        public IActionResult Profile()
+        {
+            var userId = HttpContext.Session.GetInt32("UserId");
+            if (userId == null)
+                return RedirectToAction("Login");
+
+            var model = _userService.GetProfile(userId.Value);
+            return View(model);
+        }
+
+        [HttpGet]
+        public IActionResult EditProfile()
+        {
+            var userId = HttpContext.Session.GetInt32("UserId");
+            if (userId == null)
+                return Unauthorized();
+            
+            var model = _userService.GetProfile(userId.Value);
+            return PartialView("_ProfileEdit", model);
+        }
+
+        [HttpPost]
+        public IActionResult UpdateProfile(UserProfileViewModel model)
+        {
+            _userService.UpdateProfile(model);
+            var updated = _userService.GetProfile(model.Id);
+            return PartialView("_ProfileView", updated);
+        }
+
+        // ----------------------------------------------------
+        // Logout
+        // ----------------------------------------------------
         public IActionResult Logout()
         {
             HttpContext.Session.Clear();
             return RedirectToAction("Index", "Home");
-        }
-
-
-        /*
-         * -----------------------------------------
-         * Helper Methods
-         * -----------------------------------------
-         */
-
-        private string HashPassword(string password)
-        {
-            using var sha256 = SHA256.Create();
-            byte[] bytes = sha256.ComputeHash(Encoding.UTF8.GetBytes(password));
-            return Convert.ToBase64String(bytes);
         }
     }
 }

@@ -1,0 +1,44 @@
+﻿@model List<SavedGameViewModel>
+
+<div class="container mt-4">
+
+    <h3 class="text-center">Saved Games</h3>
+
+    @if (TempData["GameDeleted"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show text-center" role="alert">
+            @TempData["GameDeleted"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
+
+    <table class="table table-striped table-hover table-bordered">
+        <thead class="table-dark">
+            <tr>
+                <th>Seed</th>
+                <th>Date Saved</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var game in Model)
+            {
+                <tr>
+                    <td>@game.Seed</td>
+                    <td>@game.DateSaved</td>
+                    <td>
+                        <a asp-action="LoadGame" asp-route-id="@game.Id" class="btn btn-sm btn-success">Load</a>
+                        <form asp-action="DeleteGame" asp-route-id="@game.Id" method="post"
+                              class="d-inline" onsubmit="return confirm('Are you sure you want to delete this saved game?');">
+                            <button class="btn btn-sm btn-danger">
+                                Delete
+                            </button>
+                        </form>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+
+</div>

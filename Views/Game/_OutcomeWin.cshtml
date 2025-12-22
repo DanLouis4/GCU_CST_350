@@ -9,11 +9,11 @@
      WIN DISPLAY PANEL
      Shown when the player reveals all safe tiles without hitting a bomb.
 --------------------------------------------------------------------------------- -->
-<div class="outcome-panel outcome-win">
+<div class="outcome-panel outcome-win mb-4">
 
     <!-- 1. WIN MESSAGE --------------------------------------------------------- -->
     <h2 class="text-success">You Win!</h2>
-    <p>All safe tiles have been revealed.</p>
+    <p>All mines have been successfully swept.</p>
 
     <!-- 2. GAME STATISTICS ----------------------------------------------------- -->
     <p><strong>Time:</strong> @elapsed</p>
@@ -21,5 +21,6 @@
 
     <!-- 3. ACTION BUTTON ------------------------------------------------------- -->
     <a href="/Game/StartGame" class="btn btn-success mt-2">Play Again</a>
+    <a href="/Game/ShowSavedGames" class="btn btn-primary mt-2">Load Game</a>
 
 </div>

@@ -1,0 +1,74 @@
+﻿@model UserProfileViewModel
+
+<form id="profileEditForm">
+
+    <input type="hidden" asp-for="Id" />
+
+    <!-- PROFILE GROUP -->
+    <div class="card p-4 mb-4">
+        <h5 class="mb-3">Profile</h5>
+
+        <div class="row mb-3">
+            <div class="col-md-6">
+                <input asp-for="FirstName" class="form-control" placeholder="First Name" />
+                <span asp-validation-for="FirstName" class="text-danger"></span>
+            </div>
+
+            <div class="col-md-6">
+                <input asp-for="LastName" class="form-control" placeholder="Last Name" />
+                <span asp-validation-for="LastName" class="text-danger"></span>
+            </div>
+        </div>
+
+        <div class="mb-3">
+            <input asp-for="Email" type="email" class="form-control" placeholder="Email Address" />
+            <span asp-validation-for="Email" class="text-danger"></span>
+        </div>
+
+        <div class="row mb-3">
+            <div class="col-md-4">
+                <div class="form-check form-check-inline">
+                    <input asp-for="Sex" class="form-check-input" type="radio" value="Male" />
+                    <label class="form-check-label">Male</label>
+                </div>
+                <div class="form-check form-check-inline">
+                    <input asp-for="Sex" class="form-check-input" type="radio" value="Female" />
+                    <label class="form-check-label">Female</label>
+                </div>
+            </div>
+
+            <div class="col-md-4">
+                <input asp-for="Age" class="form-control" placeholder="Age" />
+                <span asp-validation-for="Age" class="text-danger"></span>
+            </div>
+
+            <div class="col-md-4">
+                <select asp-for="State" class="form-select">
+                    <option value="">State...</option>
+                    @foreach (var state in Enum.GetNames(typeof(USState)))
+                    {
+                        <option value="@state">@state</option>
+                    }
+                </select>
+            </div>
+        </div>
+    </div>
+
+    <!-- ACCOUNT GROUP -->
+    <div class="form-floating mb-3">
+        <input asp-for="Username" class="form-control" disabled />
+        <label>User Name</label>
+    </div>
+
+    <small class="text-muted">
+        To update User name, please contact support.<i style="color: lightcoral">not yet implemented...</i>
+    </small>
+
+
+    <div class="text-center">
+        <button type="submit"
+                class="btn btn-success btn-lg">
+            Save Changes
+        </button>
+    </div>
+</form>

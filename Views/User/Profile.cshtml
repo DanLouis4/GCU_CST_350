@@ -1,0 +1,13 @@
+﻿@model UserProfileViewModel
+
+<div class="container mt-5">
+    <h2 class="text-center mb-4">My Profile</h2>
+
+    <div id="profile-container">
+        @await Html.PartialAsync("_ProfileView", Model)
+    </div>
+</div>
+
+@section Scripts {
+    <script src="~/js/profile.js"></script>
+}

@@ -1,3 +1,6 @@
+using MineSweeper_MVC.Data;
+using MineSweeper_MVC.Services;
+
 namespace MineSweeper_MVC
 {
     public class Program
@@ -19,6 +22,13 @@ namespace MineSweeper_MVC
                 options.Cookie.HttpOnly = true;
                 options.Cookie.IsEssential = true;
             });
+
+            builder.Services.AddScoped<CoreGameServices>();
+
+            
+            builder.Services.AddScoped<IUserDao, UserDao>();
+            builder.Services.AddScoped<IUserService, UserService>();
+
 
             // Add HttpContextAccessor service
             builder.Services.AddHttpContextAccessor();

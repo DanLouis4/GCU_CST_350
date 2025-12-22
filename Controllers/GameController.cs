@@ -13,8 +13,34 @@ namespace MineSweeper_MVC.Controllers
     public class GameController : Controller
     {
 
-        private readonly CoreGameServices _gameServices = new CoreGameServices();
+        private readonly CoreGameServices _gameServices;
 
+        public GameController(CoreGameServices gameServices)
+        {
+            _gameServices = gameServices;
+        }
+
+
+        /**************************************************************
+         * 
+         * STARTING A GAME CONTROLS
+         * 
+         **************************************************************/
+
+        [HttpGet]
+        public IActionResult SelectAGame()
+        {
+            return View();
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> ShowSavedGames()
+        {
+            int userId = HttpContext.Session.GetInt32("UserId") ?? 0;
+
+            var games = await _gameServices.GetSavedGamesAsync(userId);
+            return View(games);
+        }
 
         // GET: /Game/StartGame: Display game start options
         [HttpGet]
@@ -67,19 +93,19 @@ namespace MineSweeper_MVC.Controllers
         }
 
         [HttpGet]
-        public IActionResult InitializeGameGet(int boardSize, string difficultyType)
+        public async Task<IActionResult> InitializeGameGet(int boardSize, string difficultyType)
         {
-            return InitializeGameInternal(boardSize, difficultyType);
+            return await InitializeGameInternal(boardSize, difficultyType);
         }
 
         //POST: /Game/MindSweeperBoard
         [HttpPost]
-        public IActionResult InitializeGamePost(int boardSize, string difficultyType)
+        public async Task<IActionResult> InitializeGamePost(int boardSize, string difficultyType)
         {
-            return InitializeGameInternal(boardSize, difficultyType);
+            return await InitializeGameInternal(boardSize, difficultyType);
         }
 
-        private IActionResult InitializeGameInternal(int boardSize, string difficultyType)
+        private async Task<IActionResult> InitializeGameInternal(int boardSize, string difficultyType)
         {
             var username = HttpContext.Session.GetString("Username");
             if (string.IsNullOrEmpty(username))
@@ -100,7 +126,7 @@ namespace MineSweeper_MVC.Controllers
             board.SetupRewards();
             board.CountBombNearby();
 
-            board.GameId = Random.Shared.Next(10000000, 99999999); // 8-digit seed
+            board.GameId = await _gameServices.GenerateSeed();
 
             // Set the start time in both Session AND Board
             var now = DateTime.UtcNow;
@@ -109,10 +135,33 @@ namespace MineSweeper_MVC.Controllers
             // HttpContext.Session.SetString("StartTime", DateTime.UtcNow.ToString("o"));
             HttpContext.Session.SetString($"LastBoardSize_{username}", boardSize.ToString());
             HttpContext.Session.SetString($"LastDifficulty_{username}", difficultyType);
+            HttpContext.Session.Remove("GameId");
             HttpContext.Session.SetObject("CurrentBoard", board);
 
             return RedirectToAction("MineSweeperBoard");
         }
+
+        // GET: /Game/MinesweeperBoard
+        public IActionResult MinesweeperBoard()
+        {
+            var username = HttpContext.Session.GetString("Username");
+            if (string.IsNullOrEmpty(username))
+                return RedirectToAction("Login", "User");
+
+            var board = HttpContext.Session.GetObject<Board>("CurrentBoard");
+            if (board == null)
+                return RedirectToAction("StartGame");
+
+            ViewBag.IsNewGame = HttpContext.Session.GetInt32("GameId") == null;
+
+            return View(board);
+        }
+
+        /************************
+         * 
+         * PLAY GAME CONTROLS
+         * 
+         ************************/
 
         [HttpPost]
         public IActionResult VisitCell(string cell)
@@ -165,6 +214,9 @@ namespace MineSweeper_MVC.Controllers
 
             // --- 4. SAVE AND RETURN NORMAL BOARD -------------------------------------------
             HttpContext.Session.SetObject("CurrentBoard", board);
+            
+            ViewBag.IsNewGame = HttpContext.Session.GetInt32("GameId") == null;
+
             return View("MineSweeperBoard", board);
         }
 
@@ -199,6 +251,9 @@ namespace MineSweeper_MVC.Controllers
             // --- 3. SAVE UPDATED BOARD BACK INTO SESSION ------------------------------------
             HttpContext.Session.SetObject("CurrentBoard", board);
 
+            // --- 3a. Remembers 
+            ViewBag.IsNewGame = HttpContext.Session.GetInt32("GameId") == null;
+
             // --- 4. RETURN UPDATED BOARD PARTIAL FOR AJAX -----------------------------------
             return PartialView("_GameState", board);
         }
@@ -218,24 +273,89 @@ namespace MineSweeper_MVC.Controllers
 
             HttpContext.Session.SetObject("CurrentBoard", board);
 
+            ViewBag.IsNewGame = HttpContext.Session.GetInt32("GameId") == null;
+
             return PartialView("_GameState", board);
         }
 
-        // GET: /Game/MinesweeperBoard
-        public IActionResult MinesweeperBoard()
-        {
-            var username = HttpContext.Session.GetString("Username");
-            if (string.IsNullOrEmpty(username))
-                return RedirectToAction("Login", "User");
+        /******************************
+         * 
+         * GAME MAINTENANCE CONTROLS
+         *
+         ******************************/
 
+        [HttpPost]
+        public async Task<IActionResult> SaveGame()
+        {
             var board = HttpContext.Session.GetObject<Board>("CurrentBoard");
             if (board == null)
                 return RedirectToAction("StartGame");
 
-            return View(board);
+            int userId = HttpContext.Session.GetInt32("UserId") ?? 0;
+
+            await _gameServices.SaveGameAsync(userId, board);
+
+            ViewBag.IsNewGame = HttpContext.Session.GetInt32("GameId") == null;
+
+            return RedirectToAction("MinesweeperBoard");
         }
 
-         // Clear game session data
+        [HttpGet]
+        public async Task<IActionResult> LoadGame(int id)
+        {
+            int userId = HttpContext.Session.GetInt32("UserId") ?? 0;
+            if (userId == 0)
+                return RedirectToAction("Login", "User");
+
+            var board = await _gameServices.LoadGameAsync(id, userId);
+            
+            if (board == null)
+                return RedirectToAction("ShowSavedGames");
+
+            // Reset timing safely
+            board.StartTime = DateTime.UtcNow;
+            // board.EndTime = null;
+            board.CurrentStatus = Board.GameStatus.InProgress;
+
+            HttpContext.Session.SetInt32("GameId", id);
+            HttpContext.Session.SetObject("CurrentBoard", board);
+
+            ViewBag.IsNewGame = HttpContext.Session.GetInt32("GameId") == null;
+
+            return RedirectToAction("MineSweeperBoard");
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> UpdateGame()
+        {
+            int userId = HttpContext.Session.GetInt32("UserId") ?? 0;
+            int? gameId = HttpContext.Session.GetInt32("GameId");
+
+            if (userId == 0 || gameId == null)
+                return RedirectToAction("StartGame");
+
+            var board = HttpContext.Session.GetObject<Board>("CurrentBoard");
+            await _gameServices.UpdateGameAsync(gameId.Value, userId, board);
+
+            return RedirectToAction("MineSweeperBoard");
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> DeleteGame(int id)
+        {
+            int userId = HttpContext.Session.GetInt32("UserId") ?? 0;
+            if (userId == 0)
+                return RedirectToAction("Login", "User");
+
+            await _gameServices.DeleteGameAsync(id, userId);
+
+            TempData["GameDeleted"] = "Saved game deleted successfully.";
+
+            return RedirectToAction("ShowSavedGames");
+        }
+
+
+        // Clear game session data
         private void ClearGameSession()
         {
             HttpContext.Session.Remove("GameOver");

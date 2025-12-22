@@ -3,7 +3,9 @@
 @{
     bool isOver = ViewBag.GameOver != null && (bool)ViewBag.GameOver;
     var state = ViewBag.GameState;
+    bool isNewGame = ViewBag.IsNewGame ?? true;
 }
+
 <div class="game-state">
     @if (isOver)
     {
@@ -32,8 +34,25 @@
                 </div>
             </div>
 
-            <!-- COLUMN 2 — Timer -->
-            <div class="info-section timer-center">
+            <!-- COLUMN 2 — Save and Load -->
+            <div class="info-section">
+                <div class="info-row">
+                    @if (isNewGame)
+                    {   
+                    <form asp-controller="Game" asp-action="SaveGame" method="post" class="info-row">
+                        <button type="submit" class="btn btn-success restart-btn btn-sm">Save Game</button>
+                    </form>
+                    }
+                    else
+                    {
+                        <form asp-controller="Game" asp-action="UpdateGame" method="post" class="info-row">
+                            <button type="submit" class="btn btn-success restart-btn btn-sm">Update Save</button>
+                        </form>
+                    }
+                </div>
+                <div class="info-row">
+                    <a asp-controller="Game" asp-action="ShowSavedGames" class="btn btn-primary restart-btn">Load Game</a>
+                </div>
             </div>
 
             <!-- COLUMN 3 — Bomb Count + Flags + Give Up -->

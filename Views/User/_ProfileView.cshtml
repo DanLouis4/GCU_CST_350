@@ -1,0 +1,48 @@
+﻿@model UserProfileViewModel
+
+<div class="card p-4 mb-4">
+
+    <div class="mb-3">
+        <label class="form-label text-muted">First Name</label>
+        <div class="form-control-plaintext">@Model.FirstName</div>
+    </div>
+
+    <div class="mb-3">
+        <label class="form-label text-muted">Last Name</label>
+        <div class="form-control-plaintext">@Model.LastName</div>
+    </div>
+
+    <div class="mb-3">
+        <label class="form-label text-muted">Email</label>
+        <div class="form-control-plaintext">@Model.Email</div>
+    </div>
+
+    <div class="row mb-3">
+        <div class="col-md-4">
+            <label class="form-label text-muted">Sex</label>
+            <div class="form-control-plaintext">@Model.Sex</div>
+        </div>
+
+        <div class="col-md-4">
+            <label class="form-label text-muted">Age</label>
+            <div class="form-control-plaintext">@Model.Age</div>
+        </div>
+
+        <div class="col-md-4">
+            <label class="form-label text-muted">State</label>
+            <div class="form-control-plaintext">@Model.State.ToString()</div>
+        </div>
+    </div>
+
+    <div class="mb-3">
+        <label class="form-label text-muted">Username</label>
+        <div class="form-control-plaintext">@Model.Username</div>
+    </div>
+
+    <div class="text-center">
+        <button id="editProfile"
+                class="btn btn-primary btn-lg">
+            Update
+        </button>
+    </div>
+</div>

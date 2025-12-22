@@ -1,0 +1,28 @@
+﻿@{
+    ViewData["Title"] = "Select Game Option";
+}
+<div class="container-fluid">
+    
+    <!-- HERO SECTION -->
+    <div class="hero-section text-center py-5">
+        <h1 class="welcome-text mb-2">Let's Play</h1>
+        <h1 class="bungee-title mb-4">MINESWEEPER</h1>
+    </div>
+
+    <div class="text-center">
+        <h2>Select an Option</h2>
+
+        <div class="mt-4">
+            <a asp-action="ShowSavedGames"
+               class="btn btn-primary btn-lg me-3">
+                Load Saved Game
+            </a>
+
+            <a asp-action="StartGame"
+               class="btn btn-success btn-lg">
+                Start New Game
+            </a>
+        </div>
+    </div>
+
+</div>
